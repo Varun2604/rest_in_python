@@ -1,6 +1,6 @@
 import json
 
-from exceptions import InvalidInput
+from ..exceptions import InvalidInput
 
 class RestBean(object):
 

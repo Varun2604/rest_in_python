@@ -1,8 +1,8 @@
 from flask.views import MethodView
 from flask import request
 
-from bean import RestBean
-from data_administer import DB_OPERATIONS
+from ..bean import RestBean
+from ..data_administer import DB_OPERATIONS
 
 class RestView(MethodView):
 

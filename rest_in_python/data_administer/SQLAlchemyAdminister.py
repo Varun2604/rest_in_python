@@ -1,4 +1,4 @@
-from data_administer import DataAdminister
+from ..data_administer import DataAdminister
 
 #class has methods to fetch from
 class SQLAlchemyAdminister(DataAdminister):
