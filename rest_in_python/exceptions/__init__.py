@@ -5,10 +5,24 @@ class RestException(Exception):
         if kwargs is not None:
             if 'message' in kwargs:
                     message = kwargs['message']
-        super(RestException, self).__init__(message=message, *args, **kwargs)
+        super(RestException, self).__init__(*args, **kwargs)
         self.code = code
         self.title = title
         self.field = field
+
+    @staticmethod
+    def getExceptionObject(e):
+        exception = {
+            'status' : 4000,
+            'message' : 'Internal Error'
+        }
+        if isinstance(e, InvalidInput):
+            exception['status'] = e.code
+            exception['message'] = e.title
+            if e.field is not None:
+                exception['field'] = e.field
+
+        return exception
 
 class InvalidInput(RestException):
 

@@ -3,6 +3,14 @@ from flask import request
 
 from ..bean import RestBean
 from ..data_administer import DB_OPERATIONS,SQLAlchemyAdminister
+from ..exceptions import RestException
+
+HTTP_OPERATION = {
+    'POST' : 'POST',
+    'GET' : 'GET',
+    'PUT' : 'PUT',
+    'DELETE' : 'DELETE'
+}
 
 class RestView(MethodView):
 
@@ -12,39 +20,102 @@ class RestView(MethodView):
         self.data_administer = SQLAlchemyAdminister();
 
     def get(self, id):
-        if id is None:
-            # return a list of users
-            pass
-        else:
-            # return a single user
+        try:
+            if id is not None:
+                this_bean = self.process_data(id, HTTP_OPERATION['GET'])
 
-            pass
+                self.check_authorization(HTTP_OPERATION['GET'], this_bean, None)
+
+                return this_bean
+            else:
+
+                this_bean = self.process_data(request.json, HTTP_OPERATION['GET'])
+
+                self.check_authorization(HTTP_OPERATION['GET'], this_bean, None)
+
+                return this_bean
+        except:
+            return {
+                'status' : 4000,
+                'message' : 'Unknown Error'
+            }
 
     def post(self):
 
-        input_bean = RestBean(self.model, request.json)
+        try:
+            input_bean = RestBean(self.model, request.json)
 
-        self.check_authorization('POST', input_bean, None)
+            self.check_authorization(HTTP_OPERATION['POST'], input_bean, None)
 
-        self.check_input_validation(input_bean, None)
+            self.check_input_validation(input_bean, None)
 
-        self.check_write_protection(input_bean)
+            self.check_write_protection(input_bean, HTTP_OPERATION['POST'])
 
-        input_bean = self.get_preprocessed_data(input_bean, "POST")
+            input_bean = self.get_preprocessed_data(input_bean, HTTP_OPERATION['POST'])
 
-        output = self.process_data(input_bean, "POST")
+            output = self.process_data(input_bean, HTTP_OPERATION['POST'])
 
-        output = self.get_preprocessed_data(output, "POST")
+            output = self.post_process_data(output, HTTP_OPERATION['POST'])
 
-        return output
+            return output
+        except :
+            return {
+                'status' : 4000,
+                'message' : 'Unknown Error'
+            }
 
-    def delete(self, user_id):
-        # delete a single user
-        pass
+
+    def delete(self, id):
+
+        try:
+
+            this_bean = self.get(id)
+
+            self.check_authorization(HTTP_OPERATION['DELETE'], None, this_bean)
+
+            self.check_write_protection(this_bean, HTTP_OPERATION['DELETE'])
+
+            input_bean = self.get_preprocessed_data(this_bean, HTTP_OPERATION['DELETE'])
+
+            self.process_data(input_bean, HTTP_OPERATION['DELETE'])
+
+            self.post_process_data(None, HTTP_OPERATION['DELETE'])
+
+            return {
+                'status' : 2000,
+                'message' : 'success'
+            }
+        except:
+            return {
+                'status' : 4000,
+                'message' : 'Unknown Error'
+            }
 
     def put(self, user_id):
-        # update a single user
-        pass
+
+        try:
+            input_bean = RestBean(self.model, request.json)
+
+            this_bean = self.get(id)
+
+            self.check_authorization(HTTP_OPERATION['PUT'], input_bean, this_bean)
+
+            self.check_input_validation(input_bean, this_bean)
+
+            self.check_write_protection(input_bean, HTTP_OPERATION['PUT'])
+
+            input_bean = self.get_preprocessed_data(input_bean, HTTP_OPERATION['PUT'])
+
+            output = self.process_data(input_bean, HTTP_OPERATION['PUT'])
+
+            output = self.post_process_data(output, HTTP_OPERATION['PUT'])
+
+            return output
+        except :
+            return {
+                'status' : 4000,
+                'message' : 'Unknown Error'
+            }
 
     def get_model(self):
         if self.model is None:
@@ -61,27 +132,28 @@ class RestView(MethodView):
         #TODO do field specific validation here
         pass
 
-    def check_write_protection(self, input):
+    def check_write_protection(self, input, method):
         pass
 
     def get_preprocessed_data(self, input, method):         # preprocess data before sending to db
         return input
 
     def process_data(self, input, method):                          # send to db and return new data/ fetch data from db
-        if method == 'POST':
+
+        if method == HTTP_OPERATION['POST']:
             output = self.data_administer.add_entry(self.model, input)
-        elif method == 'PUT':
+        elif method == HTTP_OPERATION['PUT']:
             output = self.data_administer.edit_entry(self.model, input)
-        elif method == 'DELETE':
+        elif method == HTTP_OPERATION['DELETE']:
             output = self.data_administer.delete_entry(self.model, input)
-        elif method == 'GET' and isinstance(input, int):
+        elif method == HTTP_OPERATION['GET'] and isinstance(input, int):
             output = self.data_administer.get_entry(self.model, input)
         else:
             output = self.data_administer.get_list(self.model, input)
 
-        return output
+        return RestBean(self.model, output)
 
-    def post_process_data(self, input):                     # convert from model to python-dict or RestBean
+    def post_process_data(self, input, method):                     # convert from model to python-dict or RestBean
         return input
 
 
