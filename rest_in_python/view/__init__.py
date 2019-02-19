@@ -14,12 +14,12 @@ HTTP_OPERATION = {
 
 class RestView(MethodView):
 
-    def __init__(self, model):
+    def __init__(self, model, conn_holder):
         # model is the Schema class instance of any orm (like DeclarativeBase instance in SQLAlchemy)
         self.model = model
-        self.data_administer = SQLAlchemyAdminister();
+        self.conn_holder = conn_holder
 
-    def get(self, id):
+    def get(self, id=None):
         try:
             if id is not None:
                 this_bean = self.process_data(id, HTTP_OPERATION['GET'])
@@ -139,17 +139,17 @@ class RestView(MethodView):
         return input
 
     def process_data(self, input, method):                          # send to db and return new data/ fetch data from db
-
+        conn = self.conn_holder.get_connection()
         if method == HTTP_OPERATION['POST']:
-            output = self.data_administer.add_entry(self.model, input)
+            output = SQLAlchemyAdminister.add_entry(conn, self.model, input)
         elif method == HTTP_OPERATION['PUT']:
-            output = self.data_administer.edit_entry(self.model, input)
+            output = SQLAlchemyAdminister.edit_entry(conn, self.model, input)
         elif method == HTTP_OPERATION['DELETE']:
-            output = self.data_administer.delete_entry(self.model, input)
+            output = SQLAlchemyAdminister.delete_entry(conn, self.model, input)
         elif method == HTTP_OPERATION['GET'] and isinstance(input, int):
-            output = self.data_administer.get_entry(self.model, input)
+            output = SQLAlchemyAdminister.get_entry(conn, self.model, input)
         else:
-            output = self.data_administer.get_list(self.model, input)
+            output = SQLAlchemyAdminister.get_list(conn, self.model, input)
 
         return RestBean(self.model, output)
 
