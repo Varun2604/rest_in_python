@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="rest_in_python",
-    version="0.0.5",
+    version="0.0.6",
     author="Varun V Iyer",
     author_email="iyervarun2604@gmail.com",
     description="An extensively extendable and intelligent REST api framework for python",
