@@ -13,7 +13,7 @@ class RestBean(object):
         self.model = model
         if json_str is not None:
             self.input = json.load(json_str)
-        elif input is not None and type(input) is dict:
+        elif input is not None :
             self.input = input
             self.is_partial = False
 
@@ -34,3 +34,20 @@ class RestBean(object):
     def get_schema(self):
         return self.model
 
+    def json(self):
+            if type(self.input) == list:
+                arr = []
+                for l in self.input:
+                    arr.append(RestBean.__json__(l))
+                return json.dumps(arr)
+            else:
+                return json.dumps(RestBean.__json__(self.input))
+
+
+    @staticmethod
+    def __json__(inp):
+        if type(inp) == dict:
+            return inp
+        d = inp.__dict__
+        d.pop('_sa_instance_state')
+        return d

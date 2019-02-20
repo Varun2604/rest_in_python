@@ -22,7 +22,8 @@ class SQLAlchemyAdminister(object):
     # param - input - model instance containing all the data to be inserted
     # return - updated model instance
     @staticmethod
-    def add_entry(connection, model, datum):
+    def add_entry(connection, model, input):
+        datum = SQLAlchemyAdminister.json_to_model(model, input)
         connection.session.add(datum)
         connection.session.commit()
         return datum
@@ -47,4 +48,17 @@ class SQLAlchemyAdminister(object):
         connection.session.delete(datum)
         connection.session.commit()
         return True
+
+    @staticmethod
+    def json_to_model(model, datum):
+        columns = SQLAlchemyAdminister.get_columns_for_model(model)
+        for c in columns:
+            if c in datum and c != 'id':
+                setattr(model, c, datum[c])
+        return model
+
+    @staticmethod
+    #TODO implementation changes according to the underlying ORM, so use a function from the ORM util.
+    def get_columns_for_model(schema):
+        return schema.__table__.columns._data.keys()
 
